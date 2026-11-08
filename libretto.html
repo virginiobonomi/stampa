@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A3 a libretto</title>
+  <link rel="stylesheet" href="taskpane.css">
+  <style>
+    main { max-width: 620px; margin: 0 auto; padding: 24px 16px 60px; }
+    .zona { min-height: 160px; }
+    ol { padding-left: 20px; line-height: 1.6; }
+    #esito a { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>A3 a libretto</h1>
+      <p class="sub">Dal PDF dell'originale (pagine A4) al PDF A3 da stampare a libretto. Il file resta su questo computer:
+        non viene inviato da nessuna parte.</p>
+    </header>
+    <section class="card">
+      <ol>
+        <li>In Word, sull'originale creato con <strong>Stampa originali</strong> (modello A3 a libretto):
+          File › Salva con nome… › Formato: PDF (oppure File › Stampa › PDF › Salva come PDF).</li>
+        <li>Trascina qui sotto quel PDF: si scarica il PDF A3 a libretto.</li>
+        <li>Aprilo e stampalo su A3, <strong>fronte-retro, lato corto</strong>, senza adattare alla pagina.</li>
+      </ol>
+    </section>
+    <label id="zona" class="zona" tabindex="0">
+      <input id="file" type="file" accept="application/pdf,.pdf" hidden>
+      <span class="zona-titolo">Trascina qui il PDF dell'originale</span>
+      <span class="zona-sub">oppure clicca per sceglierlo</span>
+    </label>
+    <p id="esito" class="stato"></p>
+  </main>
+  <script src="lib/pdf-lib.min.js"></script>
+  <script src="libretto.js"></script>
+  <script>
+    (function () {
+      var zona = document.getElementById("zona"), input = document.getElementById("file"), esito = document.getElementById("esito");
+      function stato(m, t) { esito.textContent = ""; esito.className = "stato" + (t ? " " + t : ""); if (typeof m === "string") esito.textContent = m; else esito.appendChild(m); }
+      function elabora(f) {
+        if (!f) return;
+        if (!/\.pdf$/i.test(f.name) && f.type !== "application/pdf") { stato("«" + f.name + "» non è un PDF.", "err"); return; }
+        stato("Impaginazione in corso…");
+        f.arrayBuffer().then(function (b) { return Libretto.impagina(new Uint8Array(b)); }).then(function (r) {
+          var nome = f.name.replace(/\.pdf$/i, "") + " - A3 libretto.pdf";
+          var url = URL.createObjectURL(new Blob([r.byte], { type: "application/pdf" }));
+          var a = document.createElement("a");
+          a.href = url; a.download = nome; a.textContent = nome;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          var p = document.createElement("span");
+          var link = document.createElement("a"); link.href = url; link.download = nome; link.textContent = "scaricalo di nuovo";
+          p.appendChild(document.createTextNode("Fatto: " + r.pagine + " pagine su " + r.fogli + (r.fogli === 1 ? " foglio" : " fogli") +
+            " A3 (" + (r.fogli * 2) + " facciate). Se il download non è partito, "));
+          p.appendChild(link); p.appendChild(document.createTextNode("."));
+          stato(p, "ok");
+        }).catch(function (e) { stato("Non riuscito: " + (e && e.message ? e.message : e), "err"); });
+      }
+      input.addEventListener("change", function () { elabora(input.files[0]); input.value = ""; });
+      ["dragenter", "dragover"].forEach(function (ev) { document.addEventListener(ev, function (e) { e.preventDefault(); zona.classList.add("sopra"); }); });
+      ["dragleave", "drop"].forEach(function (ev) { document.addEventListener(ev, function (e) { e.preventDefault(); zona.classList.remove("sopra"); }); });
+      document.addEventListener("drop", function (e) { elabora(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]); });
+    })();
+  </script>
+</body>
+</html>

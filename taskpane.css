@@ -86,3 +86,5 @@ footer .bottoni button { flex: 1; }
 .stato.ok { color: var(--ok); }
 .stato.err { color: var(--error); }
 .attesa { color: var(--muted); padding: 6px 0; }
+a.bottone { display: inline-block; font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; margin-top: 4px; }

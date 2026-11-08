@@ -207,8 +207,8 @@
     '<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve"> -</w:t></w:r></w:p></w:ftr>';
 
   function xmlImpostazioni(a3) {
-    return '<w:settings xmlns:w="' + W + '"><w:defaultTabStop w:val="720"/>' +
-      (a3 ? '<w:bookFoldPrinting/>' : "") +
+    return '<w:settings xmlns:w="' + W + '"><w:defaultTabStop w:val="720"/>' + (a3 ? '<w:bookFoldPrinting/>' : "") +
+
       '<w:characterSpacingControl w:val="doNotCompress"/>' +
       '<w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>';
   }
@@ -257,7 +257,8 @@
     fr.setAttributeNS(W, "w:type", "default");
     fr.setAttributeNS(R, "r:id", "rIdAttiPiede");
     sect.appendChild(fr);
-    sect.appendChild(modello.a3 ? crea(doc, "pgSz", { w: 23811, h: 16838, orient: "landscape" }) : crea(doc, "pgSz", { w: PAGINA.w, h: PAGINA.h }));
+    // A3 a libretto: foglio A3 verticale; con la "piega libro" Word lo gira e lo divide in due pagine A4
+    sect.appendChild(modello.a3 ? crea(doc, "pgSz", { w: PAGINA.h, h: 23811 }) : crea(doc, "pgSz", { w: PAGINA.w, h: PAGINA.h }));
     sect.appendChild(crea(doc, "pgMar", { top: PAGINA.su - modello.su, right: PAGINA.dx, bottom: PAGINA.giu + modello.su, left: PAGINA.sx, header: PAGINA.intest, footer: PAGINA.piede, gutter: 0 }));
     sect.appendChild(crea(doc, "cols", { space: 720 }));
     body.appendChild(sect);

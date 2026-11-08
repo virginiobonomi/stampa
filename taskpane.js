@@ -17,8 +17,6 @@
     try { window.localStorage.setItem("stampa.opzioni", JSON.stringify(opz)); } catch (e) { /* ignora */ }
     stato("statoStampa", "Preparazione dell'originale…");
     var a3 = Stampa.MODELLI[opz.modello].a3;
-    // il libretto non passa dal file (Word scarta le impostazioni del documento): si imposta sulla pagina
-    var librettoPossibile = a3 && req && req.isSetSupported("WordApiDesktop", "1.3") && req.isSetSupported("WordApiHiddenDocument", "1.3");
     var b64 = null;
     function apri(conLibretto) {
       return Word.run(function (ctx) {
@@ -32,14 +30,11 @@
       return ctx.sync().then(function () { return Stampa.originale(ox.value, opz); });
     }).then(function (b) {
       b64 = b;
-      if (!librettoPossibile) return apri(false).then(function () { return false; });
-      return apri(true).then(function () { return true; }, function () { return apri(false).then(function () { return false; }); });
-    }).then(function (libretto) {
+      if (!a3) return apri(false);
+      return apri(true).catch(function () { return apri(false); });
+    }).then(function () {
       var nome = Stampa.MODELLI[opz.modello].nome + (opz.interlineato ? ", interlineato" : "");
-      if (a3) {
-        stato("statoStampa", "Originale creato (" + nome + ") nella nuova finestra. Se lì le pagine non appaiono come A4 affiancati, " +
-          "apri Stampa originali in quella finestra e premi \"Imposta il libretto A3 su questo documento\".", libretto ? "ok" : "err");
-      } else stato("statoStampa", "Originale creato (" + nome + "): è nella nuova finestra.", "ok");
+      stato("statoStampa", "Originale creato (" + nome + "): è nella nuova finestra." + (a3 ? " Stampa fronte-retro, lato corto." : ""), "ok");
     }).catch(function (e) {
       stato("statoStampa", "Non riuscito: " + (e && e.message ? e.message : e), "err");
     });
@@ -65,36 +60,17 @@
     }).catch(function (e) { stato("statoSel", "Non riuscito: " + (e && e.message ? e.message : e), "err"); });
   }
 
-  function supporta(set, v) {
-    var req = window.Office && Office.context && Office.context.requirements;
-    return !!(req && req.isSetSupported(set, v));
-  }
-
-  // libretto sul documento attivo (l'originale aperto nella nuova finestra)
+  // piega libro sul documento attivo (l'originale A3 nella nuova finestra)
   function impostaLibretto() {
     if (!inWord) { stato("statoLibretto", "Il pannello non è aperto dentro Word.", "err"); return; }
-    if (!supporta("WordApiDesktop", "1.3")) {
-      stato("statoLibretto", "Questa versione di Word non permette al pannello di impostare il libretto: fallo a mano come qui sotto (un minuto).", "err");
-      $("manuale").hidden = false; return;
-    }
     Word.run(function (ctx) {
       var ps = ctx.document.sections.getFirst().pageSetup;
-      ps.load("pageWidth,pageHeight,orientation");
-      return ctx.sync().then(function () {
-        // il foglio è l'A3 orizzontale; il libretto lo divide in due pagine A4
-        if (ps.pageWidth < ps.pageHeight) ps.orientation = "Landscape";
-        ps.bookFoldPrinting = true;
-        return ctx.sync();
-      }).then(function () {
-        ps.load("bookFoldPrinting,pageWidth,pageHeight");
-        return ctx.sync().then(function () { return ps.bookFoldPrinting; });
-      });
+      ps.bookFoldPrinting = true;
+      return ctx.sync().then(function () { ps.load("bookFoldPrinting"); return ctx.sync(); }).then(function () { return ps.bookFoldPrinting; });
     }).then(function (ok) {
-      if (ok) stato("statoLibretto", "Libretto impostato: a video ogni pagina è un A4. Stampa fronte-retro, lato corto.", "ok");
-      else { stato("statoLibretto", "Word non ha accettato l'impostazione: fallo a mano come qui sotto.", "err"); $("manuale").hidden = false; }
+      stato("statoLibretto", ok ? "Fatto: ogni pagina è un A4. Stampa fronte-retro, lato corto." : "Word non ha accettato l'impostazione.", ok ? "ok" : "err");
     }).catch(function (e) {
-      stato("statoLibretto", "Non riuscito (" + (e && e.message ? e.message : e) + "): fallo a mano come qui sotto.", "err");
-      $("manuale").hidden = false;
+      stato("statoLibretto", "Word non l'ha accettato (" + (e && e.message ? e.message : e) + ").", "err");
     });
   }
 
@@ -106,8 +82,7 @@
     $("creaOriginale").addEventListener("click", creaOriginale);
     $("nonInterlineare").addEventListener("click", nonInterlineare);
     $("impostaLibretto").addEventListener("click", impostaLibretto);
-    if (inWord) $("diagnosi").textContent = "Funzioni di Word disponibili: impostazione pagina " + (supporta("WordApiDesktop", "1.3") ? "sì" : "no") +
-      ", documento nuovo " + (supporta("WordApi", "1.3") ? "sì" : "no") + ", documento nascosto " + (supporta("WordApiHiddenDocument", "1.3") ? "sì" : "no") + ".";
+
   }
 
   var pronto = { dom: false, office: !(window.Office && Office.onReady) };
