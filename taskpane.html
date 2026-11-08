@@ -25,12 +25,27 @@
         <option value="a3-25">A3 a libretto · 25 righe</option>
         <option value="a3-50">A3 a libretto · 50 righe</option>
       </select>
-      <label class="check"><input type="checkbox" id="interlineato" checked>Interlineato (righe completate con una linea continua)</label>
+      <label class="check"><input type="checkbox" id="interlineato" checked>Interlineato (righe completate con trattini)</label>
       <label class="check"><input type="checkbox" id="uniforma" checked>Tutto in Arial 12</label>
       <div class="bottoni" style="margin-top:10px">
         <button type="button" id="creaOriginale" class="primario">Crea l'originale</button>
       </div>
       <p id="statoStampa" class="stato"></p>
+    </section>
+
+    <section class="card" id="secLibretto">
+      <p><strong>A3 a libretto</strong></p>
+      <p class="nota">Dopo "Crea l'originale" con un modello A3, nella nuova finestra apri Stampa originali e premi:</p>
+      <button type="button" id="impostaLibretto">Imposta il libretto A3 su questo documento</button>
+      <p id="statoLibretto" class="stato"></p>
+      <div id="manuale" class="nota" hidden>
+        <p><strong>Impostazione a mano</strong> (una volta, nel documento dell'originale):</p>
+        <p>1. Layout › Margini › Margini personalizzati… (su Mac anche Formato › Documento…).</p>
+        <p>2. Alla voce "Più pagine" scegli "Piega libro"; "Pagine per libretto": Tutte.</p>
+        <p>3. Controlla che il formato carta sia A3 e conferma con OK: a video ogni pagina diventa un A4.</p>
+        <p>4. In stampa: fronte-retro, lato corto.</p>
+      </div>
+      <p class="nota" id="diagnosi"></p>
     </section>
 
     <details class="card">

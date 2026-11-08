@@ -36,9 +36,9 @@
       return apri(true).then(function () { return true; }, function () { return apri(false).then(function () { return false; }); });
     }).then(function (libretto) {
       var nome = Stampa.MODELLI[opz.modello].nome + (opz.interlineato ? ", interlineato" : "");
-      if (a3 && !libretto) {
-        stato("statoStampa", "Originale creato (" + nome + ") nella nuova finestra. Questa versione di Word non lascia impostare il libretto dal pannello: " +
-          "nel nuovo documento scegli Layout › Margini › Margini personalizzati › Più pagine: \"Piega libro\" (pagine per libretto: Tutte) e conferma con OK.", "err");
+      if (a3) {
+        stato("statoStampa", "Originale creato (" + nome + ") nella nuova finestra. Se lì le pagine non appaiono come A4 affiancati, " +
+          "apri Stampa originali in quella finestra e premi \"Imposta il libretto A3 su questo documento\".", libretto ? "ok" : "err");
       } else stato("statoStampa", "Originale creato (" + nome + "): è nella nuova finestra.", "ok");
     }).catch(function (e) {
       stato("statoStampa", "Non riuscito: " + (e && e.message ? e.message : e), "err");
@@ -65,6 +65,39 @@
     }).catch(function (e) { stato("statoSel", "Non riuscito: " + (e && e.message ? e.message : e), "err"); });
   }
 
+  function supporta(set, v) {
+    var req = window.Office && Office.context && Office.context.requirements;
+    return !!(req && req.isSetSupported(set, v));
+  }
+
+  // libretto sul documento attivo (l'originale aperto nella nuova finestra)
+  function impostaLibretto() {
+    if (!inWord) { stato("statoLibretto", "Il pannello non è aperto dentro Word.", "err"); return; }
+    if (!supporta("WordApiDesktop", "1.3")) {
+      stato("statoLibretto", "Questa versione di Word non permette al pannello di impostare il libretto: fallo a mano come qui sotto (un minuto).", "err");
+      $("manuale").hidden = false; return;
+    }
+    Word.run(function (ctx) {
+      var ps = ctx.document.sections.getFirst().pageSetup;
+      ps.load("pageWidth,pageHeight,orientation");
+      return ctx.sync().then(function () {
+        // il foglio è l'A3 orizzontale; il libretto lo divide in due pagine A4
+        if (ps.pageWidth < ps.pageHeight) ps.orientation = "Landscape";
+        ps.bookFoldPrinting = true;
+        return ctx.sync();
+      }).then(function () {
+        ps.load("bookFoldPrinting,pageWidth,pageHeight");
+        return ctx.sync().then(function () { return ps.bookFoldPrinting; });
+      });
+    }).then(function (ok) {
+      if (ok) stato("statoLibretto", "Libretto impostato: a video ogni pagina è un A4. Stampa fronte-retro, lato corto.", "ok");
+      else { stato("statoLibretto", "Word non ha accettato l'impostazione: fallo a mano come qui sotto.", "err"); $("manuale").hidden = false; }
+    }).catch(function (e) {
+      stato("statoLibretto", "Non riuscito (" + (e && e.message ? e.message : e) + "): fallo a mano come qui sotto.", "err");
+      $("manuale").hidden = false;
+    });
+  }
+
   function collega() {
     try {
       var o = JSON.parse(window.localStorage.getItem("stampa.opzioni") || "null");
@@ -72,6 +105,9 @@
     } catch (e) { /* ignora */ }
     $("creaOriginale").addEventListener("click", creaOriginale);
     $("nonInterlineare").addEventListener("click", nonInterlineare);
+    $("impostaLibretto").addEventListener("click", impostaLibretto);
+    if (inWord) $("diagnosi").textContent = "Funzioni di Word disponibili: impostazione pagina " + (supporta("WordApiDesktop", "1.3") ? "sì" : "no") +
+      ", documento nuovo " + (supporta("WordApi", "1.3") ? "sì" : "no") + ", documento nascosto " + (supporta("WordApiHiddenDocument", "1.3") ? "sì" : "no") + ".";
   }
 
   var pronto = { dom: false, office: !(window.Office && Office.onReady) };

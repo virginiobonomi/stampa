@@ -1,11 +1,11 @@
 /*
  * Atti — modelli di stampa degli originali (come RedAtto):
- *   A4 o A3 a libretto, 25 o 50 righe per pagina, interlineato (righe completate con una linea continua) o no.
+ *   A4 o A3 a libretto, 25 o 50 righe per pagina, interlineato (righe completate con trattini) o no.
  * Dal contenuto del documento (OOXML restituito da Word) costruisce un nuovo .docx pronto per la stampa.
  *
  * Interlineatura (regole di RedAtto, manuale par. 5.3.4):
- *   - la parte vuota dell'ultima riga di ogni paragrafo si riempie con una linea continua (RedAtto usa trattini);
- *   - i paragrafi centrati hanno la linea prima e dopo, quelli allineati a destra prima;
+ *   - la parte vuota dell'ultima riga di ogni paragrafo si riempie di trattini;
+ *   - i paragrafi centrati hanno trattini prima e dopo, quelli allineati a destra prima;
  *   - le righe vuote si barrano per intero;
  *   - NON si interlinea una riga chiusa con a capo manuale (Maiusc+Invio) né un paragrafo
  *     che termina con uno spazio unificatore (Ctrl+Maiusc+Spazio in Windows, Opzione+Spazio su Mac).
@@ -97,7 +97,7 @@
     if (!tabs) { tabs = crea(ppr.ownerDocument, "tabs"); imposta(ppr, "tabs", tabs); }
     // niente doppioni nella stessa posizione
     figli(tabs, "tab").forEach(function (t) { if (+attr(t, "pos") === pos) tabs.removeChild(t); });
-    tabs.appendChild(crea(ppr.ownerDocument, "tab", { val: val, leader: "underscore", pos: pos }));   // linea continua
+    tabs.appendChild(crea(ppr.ownerDocument, "tab", { val: val, leader: "hyphen", pos: pos }));   // trattini, come RedAtto
   }
 
   function interlinea(p, doc) {
