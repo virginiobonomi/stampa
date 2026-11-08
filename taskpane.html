@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <title>Stampa originali</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="lib/jszip.min.js"></script>
+  <link rel="stylesheet" href="taskpane.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Stampa originali</h1>
+      <p class="sub">Modelli di stampa come RedAtto. Dal documento aperto crea un nuovo documento pronto da stampare;
+        il documento di partenza resta com'è.</p>
+    </header>
+
+    <section class="card">
+      <label for="modelloStampa" class="campo-et">Modello</label>
+      <select id="modelloStampa">
+        <option value="a4-25">A4 · 25 righe</option>
+        <option value="a4-50">A4 · 50 righe</option>
+        <option value="a3-25">A3 a libretto · 25 righe</option>
+        <option value="a3-50">A3 a libretto · 50 righe</option>
+      </select>
+      <label class="check"><input type="checkbox" id="interlineato" checked>Interlineato (righe completate con una linea continua)</label>
+      <label class="check"><input type="checkbox" id="uniforma" checked>Tutto in Arial 12</label>
+      <div class="bottoni" style="margin-top:10px">
+        <button type="button" id="creaOriginale" class="primario">Crea l'originale</button>
+      </div>
+      <p id="statoStampa" class="stato"></p>
+    </section>
+
+    <details class="card">
+      <summary>Righe da non interlineare</summary>
+      <p class="nota">Come in RedAtto:</p>
+      <p class="nota">· un paragrafo intero: chiudilo con uno spazio unificatore
+        (Mac: Opzione+Spazio · Windows: Ctrl+Maiusc+Spazio);</p>
+      <p class="nota">· una singola riga: vai a capo con Maiusc+Invio invece di Invio.</p>
+      <button type="button" id="nonInterlineare">Non interlineare i paragrafi selezionati</button>
+      <p class="nota">Il pulsante aggiunge lo spazio unificatore in fondo ai paragrafi selezionati.</p>
+      <p id="statoSel" class="stato"></p>
+    </details>
+
+    <details class="card">
+      <summary>Note</summary>
+      <p class="nota">Margini e righe dei modelli RedAtto: margini 3,85 cm a sinistra e a destra, 25 righe a 28,1 pt o 50 a 14,05 pt,
+        Arial 12, numero di pagina "- 1 -" in basso al centro.</p>
+      <p class="nota">A3 a libretto: stampa fronte-retro, lato corto. Se il pannello non riesce a impostare il libretto,
+        nel nuovo documento: Layout › Margini › Margini personalizzati › Più pagine: "Piega libro" (pagine per libretto: Tutte).</p>
+      <p class="nota">Se l'ultima riga di un paragrafo è già piena fino al margine, Word porta la linea sulla riga dopo:
+        chiudi quel paragrafo con uno spazio unificatore.</p>
+    </details>
+  </main>
+
+  <script src="stampa.js"></script>
+  <script src="taskpane.js"></script>
+</body>
+</html>
