@@ -17,24 +17,16 @@
     try { window.localStorage.setItem("stampa.opzioni", JSON.stringify(opz)); } catch (e) { /* ignora */ }
     stato("statoStampa", "Preparazione dell'originale…");
     var a3 = Stampa.MODELLI[opz.modello].a3;
-    var b64 = null;
-    function apri(conLibretto) {
-      return Word.run(function (ctx) {
-        var nuovo = ctx.application.createDocument(b64);
-        if (conLibretto) nuovo.sections.getFirst().pageSetup.bookFoldPrinting = true;
-        return ctx.sync().then(function () { nuovo.open(); return ctx.sync(); });
-      });
-    }
     Word.run(function (ctx) {
       var ox = ctx.document.body.getOoxml();
-      return ctx.sync().then(function () { return Stampa.originale(ox.value, opz); });
-    }).then(function (b) {
-      b64 = b;
-      if (!a3) return apri(false);
-      return apri(true).catch(function () { return apri(false); });
+      return ctx.sync().then(function () { return Stampa.originale(ox.value, opz); }).then(function (b64) {
+        ctx.application.createDocument(b64).open();
+        return ctx.sync();
+      });
     }).then(function () {
       var nome = Stampa.MODELLI[opz.modello].nome + (opz.interlineato ? ", interlineato" : "");
-      stato("statoStampa", "Originale creato (" + nome + "): è nella nuova finestra." + (a3 ? " Stampa fronte-retro, lato corto." : ""), "ok");
+      stato("statoStampa", "Originale creato (" + nome + "): è nella nuova finestra. Stampa con la preimpostazione «" +
+        (a3 ? "Originale A3 libretto" : "Originale A4") + "».", "ok");
     }).catch(function (e) {
       stato("statoStampa", "Non riuscito: " + (e && e.message ? e.message : e), "err");
     });
@@ -60,20 +52,6 @@
     }).catch(function (e) { stato("statoSel", "Non riuscito: " + (e && e.message ? e.message : e), "err"); });
   }
 
-  // piega libro sul documento attivo (l'originale A3 nella nuova finestra)
-  function impostaLibretto() {
-    if (!inWord) { stato("statoLibretto", "Il pannello non è aperto dentro Word.", "err"); return; }
-    Word.run(function (ctx) {
-      var ps = ctx.document.sections.getFirst().pageSetup;
-      ps.bookFoldPrinting = true;
-      return ctx.sync().then(function () { ps.load("bookFoldPrinting"); return ctx.sync(); }).then(function () { return ps.bookFoldPrinting; });
-    }).then(function (ok) {
-      stato("statoLibretto", ok ? "Fatto: ogni pagina è un A4. Stampa fronte-retro, lato corto." : "Word non ha accettato l'impostazione.", ok ? "ok" : "err");
-    }).catch(function (e) {
-      stato("statoLibretto", "Word non l'ha accettato (" + (e && e.message ? e.message : e) + ").", "err");
-    });
-  }
-
   function collega() {
     try {
       var o = JSON.parse(window.localStorage.getItem("stampa.opzioni") || "null");
@@ -81,7 +59,6 @@
     } catch (e) { /* ignora */ }
     $("creaOriginale").addEventListener("click", creaOriginale);
     $("nonInterlineare").addEventListener("click", nonInterlineare);
-    $("impostaLibretto").addEventListener("click", impostaLibretto);
 
   }
 
